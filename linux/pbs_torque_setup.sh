@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# script adapted from Johann A. Briffa's blog
-# execute as root
+# script adapted from Johann A. Briffa's blog, setup torque pbs job scheduler on Ubuntu 14.04 LTS
+# NB. execute as root
 
 apt-get install torque-server torque-client torque-mom
 
@@ -13,7 +13,9 @@ pbs_server -t create # answer y here
 
 killall pbs_server
 
-SERVER=localhost
+SERVER=localhost # SERVER.DOMAIN, only SERVER for localhost
+SERVER_ONLY=localhost
+NCPU=20 # number of cores
 
 echo $SERVER > /etc/torque/server_name
 echo $SERVER > /var/spool/torque/server_priv/acl_svr/acl_hosts
@@ -21,7 +23,7 @@ echo root@$SERVER > /var/spool/torque/server_priv/acl_svr/operators
 echo root@$SERVER > /var/spool/torque/server_priv/acl_svr/managers
 
 # add compute node
-echo "$SERVER np=20" > /var/spool/torque/server_priv/nodes
+echo "$SERVER np=$NCPU" > /var/spool/torque/server_priv/nodes
 
 # tell compute node handler which server to contact
 echo $SERVER > /var/spool/torque/mom_priv/config
@@ -45,7 +47,7 @@ qmgr -c 'set queue batch resources_default.nodes = 1'
 qmgr -c 'set server default_queue = batch'
 
 # configure submission pool
-qmgr -c "set server submit_hosts = $SERVER"
+qmgr -c "set server submit_hosts = $SERVER_ONLY"
 qmgr -c 'set server allow_node_submit = true'
 
 # now try qsub -I and qstat
